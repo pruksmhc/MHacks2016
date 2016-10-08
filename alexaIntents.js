@@ -49,11 +49,10 @@ function getWelcomeResponse(callback) {
     const sessionAttributes = {};
     const cardTitle = 'Welcome';
     const speechOutput = 'Welcome to the Alexa Skills Kit sample. ' +
-        'Please tell me your favorite color by saying, my favorite color is red';
+        'Welcome to Tennis VR';
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
-    const repromptText = 'Please tell me your favorite color by saying, ' +
-        'my favorite color is red';
+    const repromptText = 'What is your name?';
     const shouldEndSession = false;
 
     callback(sessionAttributes,
@@ -62,7 +61,7 @@ function getWelcomeResponse(callback) {
 
 function handleSessionEndRequest(callback) {
     const cardTitle = 'Session Ended';
-    const speechOutput = 'Thank you for trying the Alexa Skills Kit sample. Have a nice day!';
+    const speechOutput = 'Thank you for playing Tennis with us. Have a nice day!';
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = true;
 
@@ -115,6 +114,25 @@ function getUpScore(intent, session, callback) {
     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
 
+/** 
+ * Gets if the ball is in or out.
+ */
+ 
+ function getLineJudge(intent, session, callback) {
+     //get the line score. 
+     const ballIn = false;
+     let res = "";
+     if (ballIn === true) {
+         res = "in";
+     } else {
+         res = "out";
+     }
+     const cardTitle = 'Line Score';
+     const speechOutput = 'The ball is ' + res +"." ;
+     const shouldEndSession = true;
+     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+ }
+
 /**
  * Gets the match score
  */
@@ -131,6 +149,15 @@ function getMatchScore(intent, session, callback) {
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = true;
     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+}
+
+function getStartReplay(intent, session, callback) {
+     //get the match score, calling Azure DB
+     //send output to the server to 'Start replay'
+     const cardTitle = 'Show replay';
+     const speechOutput = 'Replay started'
+     const shouldEndSession = true;
+     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
 
 
@@ -170,6 +197,10 @@ function onIntent(intentRequest, session, callback) {
         getDownScore(intent, session, callback);
     } else if (intentName === 'MatchScore') {
         getMatchScore(intent, session, callback);
+    } else if (intentName == 'StartReplay') {
+        getStartReplay(intent, session, callback);
+    } else if (intentName == 'LineJudge') {
+        getLineJudge(intent, session, callback);
     } else if (intentName === 'AMAZON.HelpIntent') {
         getWelcomeResponse(callback);
     } else if (intentName === 'AMAZON.StopIntent' || intentName === 'AMAZON.CancelIntent') {
