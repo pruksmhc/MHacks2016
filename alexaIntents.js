@@ -49,11 +49,11 @@ function getWelcomeResponse(callback) {
     const sessionAttributes = {};
     const cardTitle = 'Welcome';
     const speechOutput = 'Welcome to the Alexa Skills Kit sample. ' +
-        'Please tell me what you want from the Tennis VR Game';
+        'Please tell me your favorite color by saying, my favorite color is red';
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
-    const repromptText = 'Please tell me what you want from the Tennis VR Game ' +
-        'You can choose to find the score, rally, and other statistics about the game.';
+    const repromptText = 'Please tell me your favorite color by saying, ' +
+        'my favorite color is red';
     const shouldEndSession = false;
 
     callback(sessionAttributes,
@@ -62,25 +62,78 @@ function getWelcomeResponse(callback) {
 
 function handleSessionEndRequest(callback) {
     const cardTitle = 'Session Ended';
-    const speechOutput = 'Thank you for playing Tennis. Have a nice day!';
+    const speechOutput = 'Thank you for trying the Alexa Skills Kit sample. Have a nice day!';
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = true;
 
     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
 
-function getMatchScore(callback) {
-    //get the match score, calling REST endpoint.
+/**
+ * Gets the down score.
+ */
+function getDownScore(intent, session, callback) {
+      //get the down score, calling Azure DB.
+    var match = { 'team_1_score': 10, 
+                  'team_2_score' : 15
+    };
+    const cardTitle = 'Match Score';
+    var speechOutput = '';
+    if (match.team_1_score > match.team_2_score) {
+        speechOutput = 'Player 2 has the disadvantage';
+    }
+    else if (match.team_1_score == match.team_2_score) {
+        speechOutput = 'Both have the same number of points.';
+    } else {
+        speechOutput = 'Player 1 has the disadvantage';
+    }
+    // Setting this to true ends the session and exits the skill.
+    const shouldEndSession = true;
+    callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+}
+    
+/**
+ * Gets the up score.
+ */
+function getUpScore(intent, session, callback) {
+    //get the up score, calling Azure DB
+    var match = { 'team_1_score': 10, 
+                  'team_2_score' : 15
+    };
+    const cardTitle = 'Match Score';
+    var speechOutput = '';
+    if (match.team_1_score > match.team_2_score) {
+        speechOutput = 'Player 1 has the advantage';
+    }
+    else if (match.team_1_score == match.team_2_score) {
+        speechOutput = 'Both have the same number of points.';
+    } else {
+        speechOutput = 'Player 2 has the advantage';
+    }
+    // Setting this to true ends the session and exits the skill.
+    const shouldEndSession = true;
+    callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+}
+
+/**
+ * Gets the match score
+ */
+
+function getMatchScore(intent, session, callback) {
+     //get the match score, calling Azure DB
+    var match = { 'team_1_score': 10, 
+                  'team_2_score' : 15
+    };
+    const cardTitle = 'Match Score';
+    const speechOutput = 'The score for player 1 is ' + match.team_1_score +
+    'and the score for player 2 is ' + match.team_2_score;
+    
+    // Setting this to true ends the session and exits the skill.
+    const shouldEndSession = true;
+    callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
 
 
-function getUpScore(callback) {
-    //get the up score, calling REST endpoint.
-}
-
-function getDownScore(callback) {
-    //get the down score, calling REST endpoint.
-}
 
 // --------------- Events -----------------------
 
@@ -111,14 +164,13 @@ function onIntent(intentRequest, session, callback) {
     const intentName = intentRequest.intent.name;
 
     // Dispatch to your skill's intent handlers
-    if (intentName === 'MatchScore') {
-        getMatchScore(intent, session, callback);
-    } else if (intentName === 'UpScore') {
+    if (intentName === 'Upscore') {
         getUpScore(intent, session, callback);
-    }  else if (intentName === 'DownScore') {
+    } else if (intentName == 'Downscore') {
         getDownScore(intent, session, callback);
-    }
-        else if (intentName === 'AMAZON.HelpIntent') {
+    } else if (intentName === 'MatchScore') {
+        getMatchScore(intent, session, callback);
+    } else if (intentName === 'AMAZON.HelpIntent') {
         getWelcomeResponse(callback);
     } else if (intentName === 'AMAZON.StopIntent' || intentName === 'AMAZON.CancelIntent') {
         handleSessionEndRequest(callback);
