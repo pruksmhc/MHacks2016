@@ -8,7 +8,7 @@
  * For additional samples, visit the Alexa Skills Kit Getting Started guide at
  * http://amzn.to/1LGWsLG
  */
-
+var request = require('request');
 
 // --------------- Helpers that build all of the responses -----------------------
 
@@ -72,8 +72,7 @@ function handleSessionEndRequest(callback) {
  * Gets the down score.
  */
 function getDownScore(intent, session, callback) {
-      //get the down score, calling Azure DB.
-    var match = { 'team_1_score': 10, 
+    var match = { 'team_1_score': 10,
                   'team_2_score' : 15
     };
     const cardTitle = 'Match Score';
@@ -90,13 +89,25 @@ function getDownScore(intent, session, callback) {
     const shouldEndSession = true;
     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
-    
+
+
+function getTestGetFromAzure(intent, session, callback) {
+  let speechOutput = "";
+  request('13.92.39.143/api/score', function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        speechOutput = body;
+      }
+  })
+  const cardTitle = 'Azure request';
+  const shouldEndSession = true;
+  callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+}
 /**
  * Gets the up score.
  */
 function getUpScore(intent, session, callback) {
     //get the up score, calling Azure DB
-    var match = { 'team_1_score': 10, 
+    var match = { 'team_1_score': 10,
                   'team_2_score' : 15
     };
     const cardTitle = 'Match Score';
@@ -114,12 +125,12 @@ function getUpScore(intent, session, callback) {
     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
 
-/** 
+/**
  * Gets if the ball is in or out.
  */
- 
+
  function getLineJudge(intent, session, callback) {
-     //get the line score. 
+     //get the line score.
      const ballIn = false;
      let res = "";
      if (ballIn === true) {
@@ -139,13 +150,13 @@ function getUpScore(intent, session, callback) {
 
 function getMatchScore(intent, session, callback) {
      //get the match score, calling Azure DB
-    var match = { 'team_1_score': 10, 
+    var match = { 'team_1_score': 10,
                   'team_2_score' : 15
     };
     const cardTitle = 'Match Score';
     const speechOutput = 'The score for player 1 is ' + match.team_1_score +
     'and the score for player 2 is ' + match.team_2_score;
-    
+
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = true;
     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
@@ -199,6 +210,8 @@ function onIntent(intentRequest, session, callback) {
         getMatchScore(intent, session, callback);
     } else if (intentName == 'StartReplay') {
         getStartReplay(intent, session, callback);
+    } else if (intentName == "Azure") {
+        getTestGetFromAzure(intent, session, callback);
     } else if (intentName == 'LineJudge') {
         getLineJudge(intent, session, callback);
     } else if (intentName === 'AMAZON.HelpIntent') {
