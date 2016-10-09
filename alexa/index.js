@@ -71,27 +71,29 @@ function handleSessionEndRequest(callback) {
 function getDownScore(intent, session, callback) {
   var request = require('request');
   let speechOutput = '';
-  request('http://13.92.39.143/api/player_score', function (error, response, body) {
+  const cardTitle = 'Up Score';
+  const shouldEndSession = true;
+  request('http://13.92.39.143/api/team_1_score', function (error, response, body) {
     if (!error && response.statusCode == 200) {
-      const cardTitle = 'Down Score';
-      var match = {'team_1_score': body.player_score.team_1_score,
-                   'team_2_score': body.player_score.team_2_score};
-      if (match.team_1_score > match.team_2_score) {
-         speechOutput = 'Player 2 has the disadvantage';
-      }
-      else if (match.team_1_score == match.team_2_score) {
-         speechOutput = 'Both have the same number of points.';
-      } else {
-         speechOutput = 'Player 1 has the disadvantage';
-      }
-      callback({}, buildSpeechletResponse(cardTitle, speechOutput , null, true));
-    }
-    callback({}, buildSpeechletResponse("Down Score",
-                                        "Could not get down score",
-                                        null,
-                                        true
-                                      ));
-  })
+      var body1 = JSON.parse(body);
+      const team_1_score = body1.Data;
+       request('http://13.92.39.143/api/team_2_score', function (error, response, body) {
+          if (!error && response.statusCode == 200) {
+           var body2 = JSON.parse(body);
+           const team_2_score = body2.Data;
+            if (team_1_score > team_2_score) {
+                speechOutput = 'Player 2 has the disadvantage';
+            }
+            else if (team_1_score == team_2_score) {
+                speechOutput = 'Both have the same number of points.';
+            } else {
+                speechOutput = 'Player 1 has the advantage';
+            }
+          callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+        }
+      });
+  }
+});
 }
 
 /** Test function for using Requests from Alexa* */
@@ -113,23 +115,27 @@ function getUpScore(intent, session, callback) {
     let speechOutput = '';
     const cardTitle = 'Up Score';
     const shouldEndSession = true;
-    request('http://13.92.39.143/api/player_score', function (error, response, body) {
+    request('http://13.92.39.143/api/team_1_score', function (error, response, body) {
       if (!error && response.statusCode == 200) {
-        var match = {'team_1_score': body.player_score.team_1_score,
-                     'team_2_score': body.player_score.team_2_score};
-        if (match.team_1_score > match.team_2_score) {
-            speechOutput = 'Player 1 has the advantage';
-        }
-        else if (match.team_1_score == match.team_2_score) {
-            speechOutput = 'Both have the same number of points.';
-        } else {
-            speechOutput = 'Player 2 has the advantage';
-        }
-        // Setting this to true ends the session and exits the skill.
-        callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
-      }
-      callback({}, buildSpeechletResponse(cardTitle, "Could not get up score", null, shouldEndSession));
-    });
+        var body1 = JSON.parse(body);
+        const team_1_score = body1.Data;
+         request('http://13.92.39.143/api/team_2_score', function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+             var body2 = JSON.parse(body);
+             const team_2_score = body2.Data;
+              if (team_1_score > team_2_score) {
+                  speechOutput = 'Player 1 has the advantage';
+              }
+              else if (team_1_score == team_2_score) {
+                  speechOutput = 'Both have the same number of points.';
+              } else {
+                  speechOutput = 'Player 2 has the advantage';
+              }
+            callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+          }
+        });
+    }
+  });
 }
 
 /**
@@ -141,12 +147,14 @@ function getUpScore(intent, session, callback) {
      var request = require('request');
      const cardTitle = 'Line Judge';
      const shouldEndSession = true;
-     request('http://13.92.39.143/api/isBallIn', function (error, response, body) {
-       console.log(body);
+     request('http://13.92.39.143/api/isBallin', function (error, response, body) {
+       var body1 = JSON.parse(body);
+       console.log(body1);
        if (!error && response.statusCode == 200) {
-         const ballIn = body.isBallIn;
+         const ballIn = body1.Data;
+         console.log(ballIn);
          let res = "";
-         if (ballIn === true) {
+         if (ballIn === true || ballIn == 'True') {
              res = "in";
          } else {
              res = "out";
@@ -169,16 +177,21 @@ function getMatchScore(intent, session, callback) {
      let speechOutput = '';
      const cardTitle = 'Match Score';
      const shouldEndSession = true;
-     request('http://13.92.39.143/api/player_score', function (error, response, body) {
+     request('http://13.92.39.143/api/team_1_score', function (error, response, body) {
        if (!error && response.statusCode == 200) {
-         var match = {'team_1_score': body.player_score.team_1_score,
-                      'team_2_score': body.player_score.team_2_score};
-          const speechOutput = 'The score for player 1 is ' + match.team_1_score +
-          'and the score for player 2 is ' + match.team_2_score;
-          callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
-        }
-        callback({}, buildSpeechletResponse(cardTitle, 'Could not get match score', null, shouldEndSession));
-      });
+         var body1 = JSON.parse(body);
+         const team_1_score = body1.Data;
+          request('http://13.92.39.143/api/team_2_score', function (error, response, body) {
+             if (!error && response.statusCode == 200) {
+              var body2 = JSON.parse(body);
+              const team_2_score = body2.Data;
+              const speechOutput = 'The score for player 1 is ' + team_1_score +
+              ' and the score for player 2 is ' + team_2_score;
+              callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+            }
+          });
+      }
+    });
 }
 
 function getStartReplay(intent, session, callback) {
@@ -190,10 +203,6 @@ function getStartReplay(intent, session, callback) {
       method: "POST",
       json: {'data': 'Replay'}
     }, function (error, response, body) {
-      console.log("INSIDE");
-        console.log(body);
-        console.log(error);
-        console.log(response);
         if (!error && response.statusCode === 200) {
           callback({}, buildSpeechletResponse(cardTitle, 'Replay successful', null, true));
         }
