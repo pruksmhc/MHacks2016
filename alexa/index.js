@@ -8,8 +8,6 @@
  * For additional samples, visit the Alexa Skills Kit Getting Started guide at
  * http://amzn.to/1LGWsLG
  */
-var request = require('request');
-
 // --------------- Helpers that build all of the responses -----------------------
 
 function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
@@ -48,8 +46,7 @@ function getWelcomeResponse(callback) {
     // If we wanted to initialize the session to have some attributes we could add those here.
     const sessionAttributes = {};
     const cardTitle = 'Welcome';
-    const speechOutput = 'Welcome to the Alexa Skills Kit sample. ' +
-        'Welcome to Tennis VR';
+    const speechOutput = 'Welcome to Tennis VR';
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
     const repromptText = 'What is your name?';
@@ -72,57 +69,67 @@ function handleSessionEndRequest(callback) {
  * Gets the down score.
  */
 function getDownScore(intent, session, callback) {
-    var match = { 'team_1_score': 10,
-                  'team_2_score' : 15
-    };
-    const cardTitle = 'Match Score';
-    var speechOutput = '';
-    if (match.team_1_score > match.team_2_score) {
-        speechOutput = 'Player 2 has the disadvantage';
+  var request = require('request');
+  let speechOutput = '';
+  request('http://13.92.39.143/api/player_score', function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      const cardTitle = 'Down Score';
+      var match = {'team_1_score': body.player_score.team_1_score,
+                   'team_2_score': body.player_score.team_2_score};
+      if (match.team_1_score > match.team_2_score) {
+         speechOutput = 'Player 2 has the disadvantage';
+      }
+      else if (match.team_1_score == match.team_2_score) {
+         speechOutput = 'Both have the same number of points.';
+      } else {
+         speechOutput = 'Player 1 has the disadvantage';
+      }
+      callback({}, buildSpeechletResponse(cardTitle, speechOutput , null, true));
     }
-    else if (match.team_1_score == match.team_2_score) {
-        speechOutput = 'Both have the same number of points.';
-    } else {
-        speechOutput = 'Player 1 has the disadvantage';
-    }
-    // Setting this to true ends the session and exits the skill.
-    const shouldEndSession = true;
-    callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+    callback({}, buildSpeechletResponse("Down Score",
+                                        "Could not get down score",
+                                        null,
+                                        true
+                                      ));
+  })
 }
 
-
-function getTestGetFromAzure(intent, session, callback) {
-  let speechOutput = "";
-  request('13.92.39.143/api/score', function (error, response, body) {
-      if (!error && response.statusCode == 200) {
-        speechOutput = body;
-      }
+/** Test function for using Requests from Alexa* */
+function getTestGetFromGoogle(intent, session, callback) {
+  var request = require('request');
+  request('http://www.google.com', function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      console.log(body) // Show the HTML for the Google homepage.
+      callback({}, buildSpeechletResponse("Google", "Google", null, true));
+    }
   })
-  const cardTitle = 'Azure request';
-  const shouldEndSession = true;
-  callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
 /**
  * Gets the up score.
  */
 function getUpScore(intent, session, callback) {
     //get the up score, calling Azure DB
-    var match = { 'team_1_score': 10,
-                  'team_2_score' : 15
-    };
-    const cardTitle = 'Match Score';
-    var speechOutput = '';
-    if (match.team_1_score > match.team_2_score) {
-        speechOutput = 'Player 1 has the advantage';
-    }
-    else if (match.team_1_score == match.team_2_score) {
-        speechOutput = 'Both have the same number of points.';
-    } else {
-        speechOutput = 'Player 2 has the advantage';
-    }
-    // Setting this to true ends the session and exits the skill.
+    var request = require('request');
+    let speechOutput = '';
+    const cardTitle = 'Up Score';
     const shouldEndSession = true;
-    callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+    request('http://13.92.39.143/api/player_score', function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        var match = {'team_1_score': body.player_score.team_1_score,
+                     'team_2_score': body.player_score.team_2_score};
+        if (match.team_1_score > match.team_2_score) {
+            speechOutput = 'Player 1 has the advantage';
+        }
+        else if (match.team_1_score == match.team_2_score) {
+            speechOutput = 'Both have the same number of points.';
+        } else {
+            speechOutput = 'Player 2 has the advantage';
+        }
+        // Setting this to true ends the session and exits the skill.
+        callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+      }
+      callback({}, buildSpeechletResponse(cardTitle, "Could not get up score", null, shouldEndSession));
+    });
 }
 
 /**
@@ -131,17 +138,25 @@ function getUpScore(intent, session, callback) {
 
  function getLineJudge(intent, session, callback) {
      //get the line score.
-     const ballIn = false;
-     let res = "";
-     if (ballIn === true) {
-         res = "in";
-     } else {
-         res = "out";
-     }
-     const cardTitle = 'Line Score';
-     const speechOutput = 'The ball is ' + res +"." ;
+     var request = require('request');
+     const cardTitle = 'Line Judge';
      const shouldEndSession = true;
-     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+     request('http://13.92.39.143/api/isBallIn', function (error, response, body) {
+       console.log(body);
+       if (!error && response.statusCode == 200) {
+         const ballIn = body.isBallIn;
+         let res = "";
+         if (ballIn === true) {
+             res = "in";
+         } else {
+             res = "out";
+         }
+         const speechOutput = 'The ball is ' + res +"." ;
+         const shouldEndSession = true;
+         callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+       }
+       callback({}, buildSpeechletResponse(cardTitle, 'Could not judge', null, shouldEndSession));
+     });
  }
 
 /**
@@ -150,25 +165,40 @@ function getUpScore(intent, session, callback) {
 
 function getMatchScore(intent, session, callback) {
      //get the match score, calling Azure DB
-    var match = { 'team_1_score': 10,
-                  'team_2_score' : 15
-    };
-    const cardTitle = 'Match Score';
-    const speechOutput = 'The score for player 1 is ' + match.team_1_score +
-    'and the score for player 2 is ' + match.team_2_score;
-
-    // Setting this to true ends the session and exits the skill.
-    const shouldEndSession = true;
-    callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+     var request = require('request');
+     let speechOutput = '';
+     const cardTitle = 'Match Score';
+     const shouldEndSession = true;
+     request('http://13.92.39.143/api/player_score', function (error, response, body) {
+       if (!error && response.statusCode == 200) {
+         var match = {'team_1_score': body.player_score.team_1_score,
+                      'team_2_score': body.player_score.team_2_score};
+          const speechOutput = 'The score for player 1 is ' + match.team_1_score +
+          'and the score for player 2 is ' + match.team_2_score;
+          callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+        }
+        callback({}, buildSpeechletResponse(cardTitle, 'Could not get match score', null, shouldEndSession));
+      });
 }
 
 function getStartReplay(intent, session, callback) {
-     //get the match score, calling Azure DB
-     //send output to the server to 'Start replay'
      const cardTitle = 'Show replay';
-     const speechOutput = 'Replay started'
-     const shouldEndSession = true;
-     callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+     const url = '13.92.39.143/';
+     var request = require('request');
+     request({
+      url: url,
+      method: "POST",
+      json: {'data': 'Replay'}
+    }, function (error, response, body) {
+      console.log("INSIDE");
+        console.log(body);
+        console.log(error);
+        console.log(response);
+        if (!error && response.statusCode === 200) {
+          callback({}, buildSpeechletResponse(cardTitle, 'Replay successful', null, true));
+        }
+        callback({}, buildSpeechletResponse(cardTitle, 'There was an error in replaying', null, true));
+      });
 }
 
 
@@ -210,8 +240,8 @@ function onIntent(intentRequest, session, callback) {
         getMatchScore(intent, session, callback);
     } else if (intentName == 'StartReplay') {
         getStartReplay(intent, session, callback);
-    } else if (intentName == "Azure") {
-        getTestGetFromAzure(intent, session, callback);
+    } else if (intentName == "Test") {
+        getTestGetFromGoogle(intent, session, callback);
     } else if (intentName == 'LineJudge') {
         getLineJudge(intent, session, callback);
     } else if (intentName === 'AMAZON.HelpIntent') {
@@ -239,7 +269,7 @@ function onSessionEnded(sessionEndedRequest, session) {
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = (event, context, callback) => {
     try {
-        console.log(`event.session.application.applicationId=${event.session.application.applicationId}`);
+        //console.log(`event.session.application.applicationId=${event.session.application.applicationId}`);
 
         /**
          * Uncomment this if statement and populate with your skill's application ID to
@@ -250,8 +280,7 @@ exports.handler = (event, context, callback) => {
              callback('Invalid Application ID');
         }
         */
-
-        if (event.session.new) {
+        if (event.request.new) {
             onSessionStarted({ requestId: event.request.requestId }, event.session);
         }
 
