@@ -49,11 +49,10 @@ function getWelcomeResponse(callback) {
     const speechOutput = 'Welcome to Tennis VR';
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
-    const repromptText = 'What is your name?';
     const shouldEndSession = false;
 
     callback(sessionAttributes,
-        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+        buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
 
 function handleSessionEndRequest(callback) {
@@ -87,7 +86,7 @@ function getDownScore(intent, session, callback) {
             else if (team_1_score == team_2_score) {
                 speechOutput = 'Both have the same number of points.';
             } else {
-                speechOutput = 'Player 1 has the advantage';
+                speechOutput = 'Player 1 has the disadvantage';
             }
           callback({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
         }
